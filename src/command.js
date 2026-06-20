@@ -1,5 +1,6 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { findNotes, getAllNotes, newNote, removeAllNotes, removeNote } from './notes.js';
 
 yargs(hideBin(process.argv))
   .command(
@@ -11,8 +12,11 @@ yargs(hideBin(process.argv))
         description: 'The content of the note to create'
       })
     } /* OPTIONAL - Formatting, definining defaults, or operations for the parameters */,
-    argv => {
-      console.log(argv.note)
+    async argv => {
+      const tags = argv.tags ? argv.tags.replaceAll(' ', '').split(',') : [];
+      const note = await newNote(argv.note, tags);
+      console.log("New Note: ", note);
+
     } /* Function to execute with the command */
   )
   .option('tags', {
@@ -21,7 +25,9 @@ yargs(hideBin(process.argv))
     description: 'tags for the note'
   })
   .command('all', 'get all notes', () => { }, async (argv) => {
-    // implementation goes here
+    const notes = await getAllNotes();
+    console.log("List of notes: ", notes);
+
   })
   .command('find <filter>', 'get matching notes', yargs => {
     return yargs.positional('filter', {
@@ -29,7 +35,9 @@ yargs(hideBin(process.argv))
       type: 'string'
     })
   }, async (argv) => {
-    // implementation goes here
+    const notes = await findNotes(argv.filter);
+    console.log(`Notes having the filter "${argv.filter}": `, notes);
+
   })
   .command('remove <id>', 'remove a note by id', yargs => {
     return yargs.positional('id', {
@@ -37,7 +45,9 @@ yargs(hideBin(process.argv))
       description: 'The id of the note you want to remove'
     })
   }, async (argv) => {
-    // implementation goes here
+    const id = await removeNote(argv.id);
+    console.log("Note removed: ", id);
+
   })
   .command('web [port]', 'launch website to see notes', yargs => {
     return yargs
@@ -50,7 +60,9 @@ yargs(hideBin(process.argv))
     // implementation goes here
   })
   .command('clean', 'remove all notes', () => { }, async (argv) => {
-    // implementation goes here
+    await removeAllNotes();
+    console.log("All notes were removed");
+
   })
   .demandCommand(1) /* makes the command required --> you cannot execute "note" by itself */
   .parse()
